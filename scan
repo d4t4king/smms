@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+
+import pprint
+import logging
+import logging.handlers
+import os, sys
+from termcolor import cprint,colored
+import datetime
+import argparse
+import subprocess
+import pwd
+
+from smmsutils import SMMSUtils
+
+### start logging
+class SyslogBOMFormatter(logging.Formatter):
+	def format(self, record):
+		result = super().format(record)
+		return "ufeff" + result
+
+def main():
+	handler = logging.handlers.SysLogHandler('/dev/log')
+	formatter = SyslogBOMFormatter(logging.BASIC_FORMAT)
+	handler.setFormatter(formatter)
+	root = logging.getLogger()
+	root.setLevel(os.environ.get("LOGLEVEL", "INFO"))
+	root.addHandler(handler)
+
+	parser = argparse.ArgumentParser("Scan a net and service.")
+	parser.add_argument('net', type=int, help="Net to acan.")
+	parser.add_argument('service', type=str, help="Service to scan.")
+	args = parser.parse_args()
+
+	assert isinstance(args.net, int), "Arg net should be an integer: 10, 172, 198"
+	assert isinstance(args.service, str), "Service should be a string: ftp, http, https, mssql, mysql, pclpjl, rdp, rsh, smtp, ssh, telnet, vnc, vpn"
+
+	#working_dir = '/opt/service_monitor'
+	working_dir = '/home/charlie/smclone'
+
+	#svc_ports = {}
+	#svc_ports['ftp'] = "-p21 "
+	#svc_ports['http'] = "-p80,8000,8080 "
+	#svc_ports['https'] = "-p443,8443 "
+	#svc_ports['mssql'] = "-p1433 "
+	#svc_ports['mysql'] = "-p3306 "
+	#svc_ports['oracle'] = "-p1521 "
+	#svc_ports['pclpjl'] = "-p9100 "
+	#svc_ports['postgres'] = "-p5432 "
+	#svc_ports['rdp'] = "-p3389 "
+	#svc_ports['rsh'] = "-p514 "
+	#svc_ports['smtp'] = "-p25,965 "
+	#svc_ports['ssh'] = "-p22 "
+	#svc_ports['telnet'] = "-p23 "
+	#svc_ports['vnc'] = "-p5800,5900-5910 "
+	#svc_ports['vpn'] = "-p1701,1723 "
+
+	smms = SMMSUtils.SMMSUtils()
+
+### set a pid file
+	with open('/tmp/scan.pid.run', 'w') as pidf:
+		pidf.write(str(os.getpid()))
+
+### Get net and port/service to scan (args?)
+### check for and set up constants for masscan, nmap, exclusion files
+	masscan = '/opt/masscan/bin/masscan'
+	nmap = '/opt/nmap/nmap'
+	exclusions = "{}/{}_exclusions.txt".format(working_dir, args.net)
+
+	today = datetime.datetime.now()
+	scan_cmd = None
+	if len(smms.SERVICES[args.service]) > 1:
+		ports = []
+		for i in smms.SERVICES[args.service]:
+			ports.append(str(i))
+		scan_cmd = "{} -p{} ".format(masscan, ",".join(ports))
+	else:
+		scan_cmd = "{} -p{} ".format(masscan, smms.SERVICES[args.service][0])
+	xmlname = "{0}/{1}/{2}_{1}_{3}.xml".format(working_dir, args.service, args.net, today.strftime("%s"))
+	target = None
+	if args.net == 10:
+		target = '10.0.0.0/8'
+		scan_cmd += "-oX {0} --excludefile {1} --reason --max-rate 256000 10.0.0.0/8".format( \
+			xmlname, exclusions)
+	elif args.net == 172:
+		target = '172.16.0.0/12'
+		scan_cmd += "-oX {0} --excludefile {1} --reason --max-rate 256000 172.16.0.0/12".format( \
+			xmlname, exclusions)
+	elif args.net == 192:
+		target = '192.168.0.0/16'
+		scan_cmd += "-oX {0} --excludefile {1} --reason --max-rate 256000 192.16.0.0/16".format( \
+			xmlname, exclusions)
+	else:
+		raise Exception("Unrecognized net: {}".format(args.net))
+
+### execute scan
+	print("Starting scan of protocol {} on network {} from 172.16.100.183.".format(args.service, target))
+	print("CMD: {}".format(scan_cmd))
+	subprocess.call(scan_cmd.split(' '))
+	print("Scan of protocol {} on network {} from 172.16.100.183 is complete.".format(args.service, target))
+
+	pwo = pwd.getpwnam('charlie')
+	#print("{}:{}".format(pwo[2], pwo[3]))
+	os.chown(xmlname, pwo[2], pwo[3])
+
+### clean up and log
+	end_time = datetime.datetime.now()
+	#print("Script complete.")
+
+if __name__=='__main__':
+	main()
+#try:
+#	exit(main())
+#except Exception as err:
+#	logging.exception("Exception in main()")
+#	exit(1)
+
