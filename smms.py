@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from smms import scan
+from core.scan import scan
 import argparse
 
 def main():
@@ -15,9 +15,17 @@ def main():
     parser.add_argument('action', help="What you want to accmpllish.")
     args = parser.parse_args()
 
+    # load config
+    # core.load_config()
+    # set up db if needed
+    # sqlutils_obj = smmssqlutils.smmssqlutils(dbtype='sqlite3', dbfile=dbfile)
     if args.action == 'scan':
-        _scan = scan.scan(target=args.target, port=args.port)
-        _scan.scan()
+        scn = scan(target=args.target, port=args.port)
+        scn.scan()
+        # maybe these go in core with scan()
+        # ... and are called by scan.scan()
+        #store.simple_store()
+        #archive.simple_archive()
     else:
         if args.action is None:
             print("YOu must specify an action to run:")

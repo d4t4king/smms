@@ -1,6 +1,7 @@
 import sys
-from utils import smmsutils as sm
 import datetime
+from core.store import store
+from utils import smmsutils as sm, smmssqlutils as smsql
 
 class scan():
     sys.dont_write_bytecode = True
@@ -22,11 +23,11 @@ class scan():
         else:
             if self.port != 0:
                 self.scan_output = "{p}_{tgt}_{dt}.xml".format( \
-                    p=self.port, tgt=self.target, \
+                    p=self.port, tgt=self.target.replace('/', '-'), \
                     dt=today.strftime('%s'))
             else:
                 self.scan_output = "{p}_{tgt}_{dt}.xml".format( \
-                    p=self.ports, tgt=self.target, \
+                    p=self.ports, tgt=self.target.replace('/', '-'), \
                     dt=today.strftime('%s'))
 
     def scan(self):
@@ -45,3 +46,6 @@ class scan():
                 port=self.ports, fn=self.scan_output, tgt=self.target)
         print("Scanning with the following command:")
         print(masscan)
+        import subprocess
+        subprocess.call(masscan.split(' '))
+        print("Scan complete.")

@@ -1,6 +1,8 @@
 import sys
 
 class smmsutils():
+    sys.dont_write_bytecode = True
+
     SERVICES = {}
     SERVICES['ftp'] = [21]
     SERVICES['http'] = [80,8000,8080]
@@ -18,7 +20,6 @@ class smmsutils():
     SERVICES['vnc'] = [5800,5900,5901,5902,5903,5904,5905,5906,5910]
     SERVICES['vpn'] = [1701,1723]
 
-    @staticmethod
     def get_xml_addrlist(xmlfile, sort=False):
         import xml.etree.ElementTree as et
         tree = None
@@ -44,7 +45,6 @@ class smmsutils():
                                     int(ip.split('.')[3])))
         return addrs
 
-    @staticmethod
     def which(pgm):
         import os
         path = os.getenv('PATH')
