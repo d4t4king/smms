@@ -10,7 +10,7 @@ import argparse
 import subprocess
 import pwd
 
-from smmsutils import SMMSUtils
+from utils import smmsutils, smmssqlutils
 
 ### start logging
 class SyslogBOMFormatter(logging.Formatter):
@@ -35,7 +35,7 @@ def main():
 	assert isinstance(args.service, str), "Service should be a string: ftp, http, https, mssql, mysql, pclpjl, rdp, rsh, smtp, ssh, telnet, vnc, vpn"
 
 	#working_dir = '/opt/service_monitor'
-	working_dir = '/home/charlie/smclone'
+	working_dir = '/root/tools/smms'
 
 	#svc_ports = {}
 	#svc_ports['ftp'] = "-p21 "
@@ -54,7 +54,7 @@ def main():
 	#svc_ports['vnc'] = "-p5800,5900-5910 "
 	#svc_ports['vpn'] = "-p1701,1723 "
 
-	smms = SMMSUtils.SMMSUtils()
+	#smms = smmsutils.smmsutils()
 
 ### set a pid file
 	with open('/tmp/scan.pid.run', 'w') as pidf:
@@ -62,19 +62,19 @@ def main():
 
 ### Get net and port/service to scan (args?)
 ### check for and set up constants for masscan, nmap, exclusion files
-	masscan = '/opt/masscan/bin/masscan'
-	nmap = '/opt/nmap/nmap'
+	masscan = smmsutils.smmsutils.which('masscan')
+	nmap = smmsutils.smmsutils.which('nmap')
 	exclusions = "{}/{}_exclusions.txt".format(working_dir, args.net)
 
 	today = datetime.datetime.now()
 	scan_cmd = None
-	if len(smms.SERVICES[args.service]) > 1:
+	if len(smmsutils.smmsutils.SERVICES[args.service]) > 1:
 		ports = []
-		for i in smms.SERVICES[args.service]:
+		for i in smmsutils.smmsutils.SERVICES[args.service]:
 			ports.append(str(i))
 		scan_cmd = "{} -p{} ".format(masscan, ",".join(ports))
 	else:
-		scan_cmd = "{} -p{} ".format(masscan, smms.SERVICES[args.service][0])
+		scan_cmd = "{} -p{} ".format(masscan, smmsutils.smmsutils.SERVICES[args.service][0])
 	xmlname = "{0}/{1}/{2}_{1}_{3}.xml".format(working_dir, args.service, args.net, today.strftime("%s"))
 	target = None
 	if args.net == 10:
@@ -98,9 +98,9 @@ def main():
 	subprocess.call(scan_cmd.split(' '))
 	print("Scan of protocol {} on network {} from 172.16.100.183 is complete.".format(args.service, target))
 
-	pwo = pwd.getpwnam('charlie')
+	#pwo = pwd.getpwnam('charlie')
 	#print("{}:{}".format(pwo[2], pwo[3]))
-	os.chown(xmlname, pwo[2], pwo[3])
+	#os.chown(xmlname, pwo[2], pwo[3])
 
 ### clean up and log
 	end_time = datetime.datetime.now()
@@ -113,4 +113,3 @@ if __name__=='__main__':
 #except Exception as err:
 #	logging.exception("Exception in main()")
 #	exit(1)
-

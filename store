@@ -11,7 +11,7 @@ import atexit
 import re
 import socket
 
-from smmsutils import SMMSUtils
+from utils import smmsutils,smmssqlutils
 
 def eprint(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
@@ -36,7 +36,7 @@ def main():
 	today = datetime.datetime.now()
 	dd = int(today.strftime('%s')) - 86400
 	last_24 = datetime.datetime.fromtimestamp(dd)
-	working_dir = '/home/charlie/smclone'
+	working_dir = '/root/tools/smms'
 	dbfile = '{}/stores.db'.format(working_dir)
 	files_to_process = []
 
@@ -47,7 +47,8 @@ def main():
 				files_to_process.append(os.path.join(root, file))
 
 	# set up/connect to the DB
-	db = SMMSUtils.SMMSSQLUtils(dbtype='sqlite3', dbfile=dbfile)
+	db = smmssqlutils.smmssqlutils(dbtype='sqlite3', dbfile=dbfile)
+	print(str(dir(db)))
 	db.dbsetup()
 	print("""dbtype: {0}
 dbfile: {1}
@@ -55,7 +56,7 @@ server: {2}
 database: {3}
 user: {4}
 pass: {5}
-port: {6}""".format (db.dbtype, db.dbfile, db.server, db.database, \
+port: {6}""".format (db.dbtype, db.dbfile, db.host, db.database, \
 	db.user, db.passw, db.port))
 
 	filecount = len(files_to_process)
@@ -65,7 +66,7 @@ port: {6}""".format (db.dbtype, db.dbfile, db.server, db.database, \
 	###		read in the xml
 		print(str(filecount))
 		print("Collecting IPs from file: {}".format(f))
-		addrs = SMMSUtils.SMMSUtils.get_xml_addrlist(f)
+		addrs = smmsutils.smmsutils.get_xml_addrlist(f)
 		filecount -= 1
 
 	addrcount = len(addrs)
@@ -95,4 +96,3 @@ port: {6}""".format (db.dbtype, db.dbfile, db.server, db.database, \
 
 if __name__=='__main__':
 	main()
-
