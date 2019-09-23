@@ -29,25 +29,32 @@ class scan():
             else:
                 self.scan_output = "{dt}.xml".format( \
                     dt=today.strftime('%s'))
+        self.masscan = sm.which('masscan')
+        if 'masscan_path' in kwargs.keys():
+            self.masscan = kwargs['masscan_path']
+        self.nmap = sm.which('nmap')
+        if 'nmap_path' in kwargs.keys():
+            self.nmap = kwargs['nmap_path']
+	
 
     def scan(self):
         if not self.target:
             print("Can't scan a target of None.")
             exit(1)
-        masscan = sm.which('masscan')
-        if masscan is None:
+        if self.masscan is None:
             print("You need to install masscan or provide a path with '-M|--masscan-path'.")
             exit(1)
+        ms_cmd = self.masscan
         if self.port:
-            masscan += " -p {port} --max-rate 10000 -oX {fn} {tgt}".format( \
+            ms_cmd += " -p {port} --max-rate 10000 -oX {fn} {tgt}".format( \
                 port=self.port, fn=self.scan_output, tgt=self.target)
         elif self.service:
-            masscan += " -p {port} --max-rate 10000 -oX {fn} {tgt}".format( \
+            ms_cmd += " -p {port} --max-rate 10000 -oX {fn} {tgt}".format( \
                 port=self.ports, fn=self.scan_output, tgt=self.target)
         print("Scanning with the following command:")
-        print(masscan)
+        print(ms_cmd)
         import subprocess
-        subprocess.call(masscan.split(' '))
+        subprocess.call(ms_cmd.split(' '))
         print("Scan complete.")
         stor = store(dbtype='sqlite3', outputxml='stores.db')
         #print(dir(stor))

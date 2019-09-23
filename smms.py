@@ -31,6 +31,8 @@ def main():
             scn = scan(target=args.target, service=args.service)
         elif args.port:
             scn = scan(target=args.target, port=args.port)
+        if args.masscan_path:
+            scn.masscan = args.masscan_path
         scn.scan()
         # maybe these go in core with scan()
         # ... and are called by scan.scan()
