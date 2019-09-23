@@ -1,9 +1,9 @@
 import sys
-import sqlite3
+from utils.smmssqlutils import smmssqlutils
 
 class store():
-    def __init__(self, outputfile, **kwargs):
-        self.outputfile = outputfile
+    def __init__(self, outputxml, **kwargs):
+        self.outputxml = outputxml
         if 'dbtype' not in kwargs.keys():
             raise Exception('Unable to determine dbtype!')
         self.dbtype = kwargs['dbtype']
@@ -19,6 +19,15 @@ class store():
 
     def simple_store(self, outputfile):
         from utils.smmssqlutils import smmssqlutils
+        import xmltodict
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
         # sqlite3 and .data.db are defaults, so just use that.
-        db = smmssqlutils()
-        print(str(dir(db)))
+        db = smmssqlutils(dbtype='sqlite3', dbfile='stores.db')
+        #print(str(dir(db)))
+        with open(outputfile, 'rb') as f:
+            xdoc = xmltodict.parse(f, xml_attribs=True)
+        for h in xdoc['nmaprun']['host']:
+            for p in h['ports']:
+                print(p)
+                #print("{}/{}".format(p['@protocol'], p['@portid']))

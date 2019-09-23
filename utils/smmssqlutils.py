@@ -2,7 +2,7 @@ import sys
 
 class smmssqlutils():
     sys.dont_write_bytecode = True
-    
+
     def __init__(self, **kwargs):
         import re
         DBTYPES_RGX = re.compile(r'(?:sqlite3|mysql|mssql|oracle|postgre)', re.IGNORECASE)
@@ -107,6 +107,28 @@ class smmssqlutils():
                 c.execute("".join(v))
             conn.commit()
             conn.close()
+        else:
+            print("Don't know how to handle database type ({}) yet.".format( \
+                self.dbtype))
+            exit(1)
+
+    def load_config(self):
+        config = {}
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            for row in c.execute("SELECT * FROM config;"):
+                config[row[0]] = row[1]
+            conn.close()
+        return config
+
+    def _get_record_id(self, table, field, value, **kwargs):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+        else:
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))
 
     def _record_exists(self, table, field, value):
         print("|{}|".format(value))
@@ -137,18 +159,37 @@ class smmssqlutils():
     def host_exists(self, ipaddr):
         return self._record_exists('found', 'ip_addr', ipaddr)
 
+    def get_port_id(self, port):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            c.execute("SELECT id FROM services WHERE ports LIKE '%?%'", \
+                (port,))
+            res = c.fetchone()
+            print("|{}|".format(res))
+            conn.close()
+        else:
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))
+        if res:
+            return int(res[0])
+        else:
+            return None
+
     def get_host_id(self, host):
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
             c = conn.cursor()
             c.execute("SELECT id FROM found WHERE ip_addr=? OR hostname=?", \
-            (host,host))
+                (host,host))
             res = c.fetchone()
             print("|{}|".format(res))
             conn.close()
         else:
-            raise Exception("Don't know how to handle db type: {}".format(self.dbtype))
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))
         if res:
             return int(res[0])
         else:
@@ -171,7 +212,43 @@ class smmssqlutils():
             conn.commit()
             conn.close()
         else:
-            raise Exception("Don't know how to handle db type: {}".format(self.dbtype))
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))
 
     def add_host(self, host_dict):
         self._insert_record('found', host_dict)
+
+    def _get_scanned_count(self, host, port):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            hid = self.get_host_id(host)
+            pid = self.get_port_id(port)
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            sql = "SELECT scanned FROM found WHERE host_id=? AND service_id=?;"
+            c.execute(sql, (hid, pid))
+            count = int(c.fetchone()[0])
+            conn.close()
+            return count
+        else:
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))
+
+    def _increment_scanned_count(self, host, port):
+        if 'sqlite3' in self.dbtype:
+            import sqlite3
+            hid = self.get_host_id(host)
+            pid = self.get_port_id(port)
+            conn = sqlite3.connect(self.dbfile)
+            c = conn.cursor()
+            sql = "SELECT scanned FROM found WHERE host_id=? AND service_id=?;"
+            c.execute(sql, (hid, pid))
+            count = int(c.fetchone()[0])
+            count += 1
+            sql = "UPDATE found SET scanned=? WHERE host_id=? AND service_id=?;"
+            c.execute(sql, (count, hid, pod))
+            conn.commit()
+            conn.close()
+        else:
+            raise Exception("Don't know how to handle db type: {}".format( \
+                self.dbtype))

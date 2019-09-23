@@ -45,6 +45,7 @@ class smmsutils():
                                     int(ip.split('.')[3])))
         return addrs
 
+    @staticmethod
     def which(pgm):
         import os
         path = os.getenv('PATH')

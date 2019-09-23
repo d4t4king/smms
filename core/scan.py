@@ -1,7 +1,8 @@
 import sys
 import datetime
 from core.store import store
-from utils import smmsutils as sm, smmssqlutils as smsql
+from utils.smmsutils import smmsutils as sm
+from utils.smmssqlutils import smmssqlutils as db
 
 class scan():
     sys.dont_write_bytecode = True
@@ -16,25 +17,24 @@ class scan():
         self.service = kwargs['service'] \
             if 'service' in kwargs.keys() else None
         if self.service and not self.port:
-            self.ports = sm.SERVICES[kwargs['service']]
+            #print(dir(sm))
+            self.ports = ",".join([str(x) for x in sm.SERVICES[kwargs['service']]])
         self.scan_output = None
         if 'outputfile' in kwargs.keys():
             self.scan_output = kwargs['outputfile']
         else:
             if self.port != 0:
-                self.scan_output = "{p}_{tgt}_{dt}.xml".format( \
-                    p=self.port, tgt=self.target.replace('/', '-'), \
+                self.scan_output = "{dt}.xml".format( \
                     dt=today.strftime('%s'))
             else:
-                self.scan_output = "{p}_{tgt}_{dt}.xml".format( \
-                    p=self.ports, tgt=self.target.replace('/', '-'), \
+                self.scan_output = "{dt}.xml".format( \
                     dt=today.strftime('%s'))
 
     def scan(self):
         if not self.target:
             print("Can't scan a target of None.")
             exit(1)
-        masscan = sm.smmsutils.which('masscan')
+        masscan = sm.which('masscan')
         if masscan is None:
             print("You need to install masscan or provide a path with '-M|--masscan-path'.")
             exit(1)
@@ -49,3 +49,6 @@ class scan():
         import subprocess
         subprocess.call(masscan.split(' '))
         print("Scan complete.")
+        stor = store(dbtype='sqlite3', outputxml='stores.db')
+        #print(dir(stor))
+        stor.simple_store(self.scan_output)

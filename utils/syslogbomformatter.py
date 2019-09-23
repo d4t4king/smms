@@ -1,7 +1,7 @@
 import logging
 
 class SyslogBOMFormatter(logging.Formatter):
-  def format(self, record):
-    result = super().format(record)
-    return "smms_scan" + record
-    
+    sys.dont_write_bytecode = True
+    def format(self, record):
+        result = super().format(record)
+        return "smms_scan" + record

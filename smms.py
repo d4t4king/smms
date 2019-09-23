@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-from core.scan import scan
 import argparse
+from core.scan import scan
 
 def main():
     sys.dont_write_bytecode = True
@@ -12,6 +12,12 @@ def main():
         help="The targets for the scan.")
     parser.add_argument('-p', '--port', type=int, dest='port', \
         help="The port to scan for.")
+    parser.add_argument('-s', '--service', type=str, dest='service', \
+        help='The service to scan for.  May include more than one port.')
+    parser.add_argument('-M', '--masscan-path', dest='masscan_path', \
+        help='The path to masscan executable.')
+    parser.add_argument('-N', '--nmap-path', dest='nmap_path', \
+        help='The path to nmap executable.')
     parser.add_argument('action', help="What you want to accmpllish.")
     args = parser.parse_args()
 
@@ -20,7 +26,11 @@ def main():
     # set up db if needed
     # sqlutils_obj = smmssqlutils.smmssqlutils(dbtype='sqlite3', dbfile=dbfile)
     if args.action == 'scan':
-        scn = scan(target=args.target, port=args.port)
+        scn = None
+        if args.service:
+            scn = scan(target=args.target, service=args.service)
+        elif args.port:
+            scn = scan(target=args.target, port=args.port)
         scn.scan()
         # maybe these go in core with scan()
         # ... and are called by scan.scan()
@@ -28,7 +38,7 @@ def main():
         #archive.simple_archive()
     else:
         if args.action is None:
-            print("YOu must specify an action to run:")
+            print("You must specify an action to run:")
             print("\tscan, store, archive, gather, vuln, stats, times")
             exit(0)
         else:

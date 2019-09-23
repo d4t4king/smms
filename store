@@ -48,7 +48,7 @@ def main():
 
 	# set up/connect to the DB
 	db = smmssqlutils.smmssqlutils(dbtype='sqlite3', dbfile=dbfile)
-	print(str(dir(db)))
+	#print(str(dir(db)))
 	db.dbsetup()
 	print("""dbtype: {0}
 dbfile: {1}
