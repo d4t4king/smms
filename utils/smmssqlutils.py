@@ -69,7 +69,8 @@ class smmssqlutils():
                             "ipv4addr TEXT NOT NULL);")
             tables['services'] = ("CREATE TABLE IF NOT EXISTS services ",
                             "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, ",
-                            "name TEXT, ports TEXT);")
+                            "name TEXT, ports TEXT, ",
+                            "status TEXT, reason TEXT);")
             tables['found'] = ("CREATE TABLE IF NOT EXISTS found ",
                             "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, ",
                             "host_id INTEGER NOT NULL, ",

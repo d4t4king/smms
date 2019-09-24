@@ -28,6 +28,9 @@ class store():
         with open(outputfile, 'rb') as f:
             xdoc = xmltodict.parse(f, xml_attribs=True)
         for h in xdoc['nmaprun']['host']:
+            #pp.pprint(h['ports'])
             for p in h['ports']:
-                print(p)
-                #print("{}/{}".format(p['@protocol'], p['@portid']))
+                #pp.pprint(h['ports']['port'])
+                pobj = h['ports']['port']
+                print("{} - {}/{}".format(h['address']['@addr'], \
+                    pobj['@protocol'], pobj['@portid']))
