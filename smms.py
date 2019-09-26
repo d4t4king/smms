@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
+import os, sys
 import argparse
 from core.scan import scan
+from utils.smmssqlutils import smmssqlutils
 
 def main():
     sys.dont_write_bytecode = True
@@ -21,10 +22,15 @@ def main():
     parser.add_argument('action', help="What you want to accmpllish.")
     args = parser.parse_args()
 
+    CONFIG = None
+    sqlutils = smmssqlutils()
+    if not os.path.exists(sqlutils.dbfile):
+        # set up db if needed
+        sqlutils.dbsetup()
+
     # load config
-    # core.load_config()
-    # set up db if needed
-    # sqlutils_obj = smmssqlutils.smmssqlutils(dbtype='sqlite3', dbfile=dbfile)
+    CONFIG = sqlutils.load_config()
+
     if args.action == 'scan':
         scn = None
         if args.service:

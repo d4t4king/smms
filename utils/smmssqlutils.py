@@ -21,21 +21,25 @@ class smmssqlutils():
         self.passw = None
         self.port = 0
 
-        if kwargs['dbtype'] is not None:
+        if 'dbtype' in kwargs.keys() and kwargs['dbtype'] is not None:
             self.dbtype = kwargs['dbtype']
         else:
             # default to sqlite3
             self.dbtype = 'sqlite3'
+            self.dbfile = 'scandata.db'
 
         if DBTYPES_RGX.search(self.dbtype) is None:
             raise ValueError("Unexpected database type: {}".format(self.dbtype))
 
         if 'sqlite3' in self.dbtype:
-            if kwargs['dbfile'] is not None:
+            if 'dbfile' in kwargs.keys() and kwargs['dbfile'] is not None:
                 assert isinstance(kwargs['dbfile'], str), \
-                    "'dnfile' must be s tring.  Got {}".format(\
+                    "'dbfile' must be s tring.  Got {}".format(\
                         type(kwargs['dbfile']))
                 self.dbfile = kwargs['dbfile']
+            elif 'dbfile' not in kwargs.keys() and self.dbfile is not None:
+                # passthru to the defaults
+                pass
             else:
                 raise Exception("You must specify a dbfile with the 'sqlite3' dbtype.")
         else:
