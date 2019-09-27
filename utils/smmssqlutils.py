@@ -1,9 +1,9 @@
 import sys
 
 class smmssqlutils():
-    sys.dont_write_bytecode = True
 
     def __init__(self, **kwargs):
+        sys.dont_write_bytecode = True
         import re
         DBTYPES_RGX = re.compile(r'(?:sqlite3|mysql|mssql|oracle|postgre)', re.IGNORECASE)
 
@@ -62,6 +62,7 @@ class smmssqlutils():
                 self.port = DEFAULT_PORTS[self.dbtype]
 
     def dbsetup(self):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
             tables = {}
@@ -121,6 +122,7 @@ class smmssqlutils():
             exit(1)
 
     def load_config(self):
+        sys.dont_write_bytecode = True
         config = {}
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -132,6 +134,7 @@ class smmssqlutils():
         return config
 
     def _get_record_id(self, table, field, value, **kwargs):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
         else:
@@ -139,6 +142,7 @@ class smmssqlutils():
                 self.dbtype))
 
     def _record_exists(self, table, field, value):
+        sys.dont_write_bytecode = True
         print("|{}|".format(value))
         if 'sqlite3' in self.dbtype:
             import sqlite3
@@ -146,12 +150,12 @@ class smmssqlutils():
             c = conn.cursor()
             # parameterized queries allows the SQL driver to translate
             # None to NULL.  (Even tho it should never be None.)
-            sql = "SELECT id FROM {tn} WHERE {fn}=?".\
-            format(tn=table, fn=field)
+            sql = "SELECT id FROM {tn} WHERE {fn}=?"\
+                    .format(tn=table, fn=field)
             try:
                 c.execute(sql, (value,))
             except sqlite3.OperationalError as err:
-                if 'table not found' in err.message:
+                if 'table not found' in str(err):
                     print("You need to run dbsetup() prior to checking if a record exists.")
                     exit(1)
                 else:
@@ -159,15 +163,21 @@ class smmssqlutils():
             result = c.fetchone()
             if result:
                 print(result)
-                return True
+                return result[0]
             else:
                 return False
             conn.close()
 
-    def host_exists(self, ipaddr):
-        return self._record_exists('found', 'ip_addr', ipaddr)
+    def ip_exists(self, ipaddr):
+        sys.dont_write_bytecode = True
+        return self._record_exists('hosts', 'ipv4addr', ipaddr)
+
+    def host_exists(self, name):
+        sys.dont_write_bytecode = True
+        return self._record_exists('hosts', 'hostname', name)
 
     def get_port_id(self, port):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
@@ -186,6 +196,7 @@ class smmssqlutils():
             return None
 
     def get_host_id(self, host):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
             conn = sqlite3.connect(self.dbfile)
@@ -204,6 +215,7 @@ class smmssqlutils():
             return None
 
     def _insert_record(self, table, fields):
+        sys.dont_write_bytecode = True
         assert isinstance(fields, dict), \
             "The fields parameter should be a dict of field/value pairs to insert."
         if 'sqlite3' in self.dbtype:
@@ -224,9 +236,11 @@ class smmssqlutils():
                 self.dbtype))
 
     def add_host(self, host_dict):
-        self._insert_record('found', host_dict)
+        sys.dont_write_bytecode = True
+        self._insert_record('hosts', host_dict)
 
     def _get_scanned_count(self, host, port):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
             hid = self.get_host_id(host)
@@ -243,6 +257,7 @@ class smmssqlutils():
                 self.dbtype))
 
     def _increment_scanned_count(self, host, port):
+        sys.dont_write_bytecode = True
         if 'sqlite3' in self.dbtype:
             import sqlite3
             hid = self.get_host_id(host)

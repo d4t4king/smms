@@ -30,6 +30,15 @@ class store():
             xdoc = xmltodict.parse(f, xml_attribs=True)
         for h in xdoc['nmaprun']['host']:
             #pp.pprint(h['ports'])
+            if not db.ip_exists(h['address']['@addr']):
+                h_dict = {}
+                h_dict['ipv4addr'] = h['address']['@addr']
+                try:
+                    h_dict['hostname'] = \
+                        socket.gethostbyaddr(h['address']['@addr'])
+                except socket.herror as err:
+                    h_dict['hostname'] = 'unresolved'
+                db.add_host(h_dict)
             for p in h['ports']:
                 pp.pprint(h['ports']['port'])
                 pobj = h['ports']['port']
